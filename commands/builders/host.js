@@ -56,11 +56,11 @@ module.exports = new SlashCommandBuilder()
         subcommand
             .setName('double-ping')
             .setDescription('Set whether to ping in both the channel and the thread')
-            .setRequired(true)
             .addStringOption(option =>
                 option
                     .setName('enabled')
                     .setDescription('Enable or disable double-ping (default: No)')
+                    .setRequired(true)
                     .addChoices(
                         { name: 'Yes', value: 'yes' },
                         { name: 'No', value: 'no' }

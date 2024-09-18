@@ -34,3 +34,5 @@ packages/
 .env
 env/
 node_modules/
+settings.json
+node_modules
