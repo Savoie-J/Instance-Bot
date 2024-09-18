@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { PermissionFlagsBits } = require('discord-api-types/v10');
 const { loadFolder } = require('../../handlers/load'); // Adjust path accordingly
 
 // Load all handlers from the folder (this will load generateDateChoices and generateTimeChoices)
@@ -21,6 +22,7 @@ module.exports = new SlashCommandBuilder()
                     .setRequired(true)
                     .addChoices(
                         { name: 'Croesus', value: 'croesus' },
+                        // Add other activities here
                     )
             )
             .addStringOption(option =>
@@ -43,5 +45,25 @@ module.exports = new SlashCommandBuilder()
                     .setName('time')
                     .setDescription('Select a time (HH:MM)')
                     .addChoices(generateTimeChoices())
+            )
+            .addRoleOption(option =>
+                option
+                    .setName('mention')
+                    .setDescription('Mention a role for the activity')
+            )
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+            .setName('double-ping')
+            .setDescription('Set whether to ping in both the channel and the thread')
+            .setRequired(true)
+            .addStringOption(option =>
+                option
+                    .setName('enabled')
+                    .setDescription('Enable or disable double-ping (default: No)')
+                    .addChoices(
+                        { name: 'Yes', value: 'yes' },
+                        { name: 'No', value: 'no' }
+                    )
             )
     );

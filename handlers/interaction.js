@@ -4,7 +4,7 @@ module.exports = async (interaction, client) => {
     if (!interaction.isCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-    console.log('Command received:', interaction.commandName);
+    // console.log('Command received:', interaction.commandName);
 
     if (!command) {
         console.error(`No command found for: ${interaction.commandName}`);
