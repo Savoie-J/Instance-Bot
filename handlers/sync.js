@@ -1,22 +1,44 @@
-const { REST, Routes } = require('discord.js');
-const { loadFolder } = require('./load');
+const { REST } = require("@discordjs/rest");
+const { Routes } = require("discord-api-types/v10");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 
-async function syncCommands(token, clientId) {
-    const commands = Object.values(loadFolder('./commands'));
-    const rest = new REST({ version: '10' }).setToken(token);
+async function syncCommands(token, clientId, commands) {
+  const rest = new REST({ version: "10" }).setToken(token);
 
-    try {
-        // console.log('Started syncing application (/) commands.');
+  if (!commands) {
+    throw new Error("Commands parameter is undefined or null.");
+  }
 
-        await rest.put(
-            Routes.applicationCommands(clientId),
-            { body: commands.map(cmd => cmd.data.toJSON()) } // Convert command data to JSON
+  // Ensure commands have a valid data property
+  const formattedCommands = commands
+    .map((command) => {
+      if (!command.data) {
+        console.error("Command data is missing:", command);
+        return null;
+      }
+
+      if (!(command.data instanceof SlashCommandBuilder)) {
+        console.error(
+          "Command data is not an instance of SlashCommandBuilder:",
+          command.data
         );
+        return null;
+      }
 
-        // console.log('Successfully synced application (/) commands.');
-    } catch (error) {
-        console.error('Error syncing commands:', error);
-    }
+      return command.data.toJSON();
+    })
+    .filter((cmd) => cmd !== null);
+
+  // console.log("Commands to be synced:", formattedCommands);
+
+  try {
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: formattedCommands,
+    });
+  } catch (error) {
+    console.error("Error syncing commands:", error);
+    throw error;
+  }
 }
 
 module.exports = { syncCommands };
