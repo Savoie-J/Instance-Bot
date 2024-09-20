@@ -5,39 +5,41 @@ const {
   ButtonStyle,
 } = require("discord.js");
 
+// separate by commas, based on button's customID
 const combinabilityRules = {
-  woodcutting: ["learner"],
-  fishing: ["learner"],
-  mining: ["learner"],
-  hunter: ["learner"],
-  learner: ["woodcutting", "fishing", "mining", "hunter"]
+  role1: ["learner"],
+  role2: ["learner"],
+  role3: ["learner"],
+  role4: ["learner"],
+  learner: ["role1", "role2", "role3", "role4"],
 };
 
-function createCroesusEmbed(user, field = {}) {
+function createBossEmbed(user, field = {}) {
+  // Create the embed
   const embed = new EmbedBuilder()
     .setAuthor({ name: user.globalName, iconURL: user.displayAvatarURL() })
-    .setTitle("Croesus")
-    .setURL("https://runescape.wiki/w/Croesus/Strategies")
-    .setColor("Green")
+    .setTitle("Boss") // BossName
+    .setURL("https://runescape.wiki/") // Link to strategy guide or wiki page
+    .setColor("Green") // Change to fit boss
     .addFields(
       {
-        name: "<:woodcutting:1285633207055810560> Woodcutting",
-        value: field.woodcutting || "`Empty`",
+        name: "<:emoji_name:emojiID> Role1",
+        value: field.role1 || "`Empty`",
         inline: true,
       },
       {
-        name: "<:fishing:1285633171156893827> Fishing",
-        value: field.fishing || "`Empty`",
+        name: "<:emoji_name:emojiID> Role2",
+        value: field.role2 || "`Empty`",
         inline: true,
       },
       {
-        name: "<:mining:1285633577962438800> Mining",
-        value: field.mining || "`Empty`",
+        name: "<:emoji_name:emojiID> Role3",
+        value: field.role3 || "`Empty`",
         inline: true,
       },
       {
-        name: "<:hunter:1285633121534087319> Hunter",
-        value: field.hunter || "`Empty`",
+        name: "<:emoji_name:emojiID> Role4",
+        value: field.role4 || "`Empty`",
         inline: true,
       }
     )
@@ -49,24 +51,25 @@ function createCroesusEmbed(user, field = {}) {
 
   // First row of buttons
   const actionRow1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("woodcutting:true")
+    new ButtonBuilder() //match custom id to field.[customID] above
+      .setCustomId("role1:true") // 'false' means non-exclusive
       .setEmoji("1285633207055810560")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("fishing:true")
+      .setCustomId("role2:false") // 'true' means exclusive (only one person on this role)
       .setEmoji("1285633171156893827")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("mining:true")
+      .setCustomId("role3:false")
       .setEmoji("1285633577962438800")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("hunter:true")
+      .setCustomId("role4:false")
       .setEmoji("1285633121534087319")
       .setStyle(ButtonStyle.Secondary)
   );
 
+  // Second row with the "Complete the group" button
   const actionRow2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("complete")
@@ -80,7 +83,8 @@ function createCroesusEmbed(user, field = {}) {
       .setStyle(ButtonStyle.Danger)
   );
 
-  return { embed, actionRow1, actionRow2 }; 
+  // Return both the embed and the button rows
+  return { embed, actionRow1, actionRow2 }; // Ensure actionRows is returned correctly
 }
 
-module.exports = { createCroesusEmbed, combinabilityRules };
+module.exports = { createBossEmbed, combinabilityRules };

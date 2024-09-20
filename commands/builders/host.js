@@ -33,7 +33,7 @@ module.exports = new SlashCommandBuilder()
           .setDescription(
             "Add a description to the top of the embed (max 2048 characters)"
           )
-          .setMaxLength(2048)
+          .setMaxLength(1024)
       )
       .addRoleOption((option) =>
         option
@@ -100,6 +100,42 @@ module.exports = new SlashCommandBuilder()
             { name: "Yes", value: "yes" },
             { name: "No", value: "no" }
           )
+      )
+  )
+
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("assign")
+      .setDescription("Assign a user to an embed")
+      .addUserOption((option) =>
+        option
+          .setName("user")
+          .setDescription("The user to assign")
+          .setRequired(true)
+      )
+      .addStringOption((option) =>
+        option
+          .setName("message_link")
+          .setDescription("The link to the message containing the embed")
+          .setRequired(true)
+      )
+  )
+  
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("unassign")
+      .setDescription("Unassign a user from an embed")
+      .addUserOption((option) =>
+        option
+          .setName("user")
+          .setDescription("The user to unassign")
+          .setRequired(true)
+      )
+      .addStringOption((option) =>
+        option
+          .setName("message_link")
+          .setDescription("The link to the message containing the embed")
+          .setRequired(true)
       )
   )
 
