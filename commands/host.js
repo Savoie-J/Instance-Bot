@@ -15,6 +15,8 @@ const hostCommandBuilder = require("./builders/host");
 const embeds = loadFolder("./embeds"); // Dynamically load all embeds
 const handlers = loadFolder("./handlers");
 const { getDateTimeDetails } = handlers.datetime;
+const generateTimeChoices = handlers.time;
+const generateDateChoices = handlers.date;
 const { loadSettings, saveSettings, setDoublePing, getDoublePing } =
   handlers.settings; // Import settings functions
 const { isRoleRestricted } = require("../handlers/settings");
@@ -33,6 +35,14 @@ for (const [guildId, enabled] of Object.entries(settings.doublePing || {})) {
 function areRolesCombinable(activityName, role1, role2) {
   const rules = embeds[activityName].combinabilityRules;
   return rules && rules[role1] && rules[role1].includes(role2);
+}
+
+function isValidDateFormat(input) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(input);
+}
+
+function isValidTimeFormat(input) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(input);
 }
 
 module.exports = {
@@ -106,6 +116,7 @@ module.exports = {
           const mention = interaction.options.getRole("mention");
           const maxPlayers = interaction.options.getInteger("maximum_players");
           const description = interaction.options.getString("description");
+          const combine = interaction.options.getString("combine") || "no";
 
           // Get new options
           const addFill = interaction.options.getString("fill") === "yes";
@@ -113,6 +124,22 @@ module.exports = {
           const addReserve =
             interaction.options.getString("reserve") === "yes" ||
             interaction.options.getString("reserve") === null; // Default to 'yes'
+
+          // Check if date is provided before validating its format
+          if (date && !isValidDateFormat(date)) {
+            return interaction.reply({
+              content: "Invalid date format. Please use YYYY-MM-DD.",
+              ephemeral: true,
+            });
+          }
+
+          // Check if time is provided before validating its format
+          if (time && !isValidTimeFormat(time)) {
+            return interaction.reply({
+              content: "Invalid time format. Please use HH:MM.",
+              ephemeral: true,
+            });
+          }
 
           // Access the function within the module
           const embedModule = embeds[activityName];
@@ -206,7 +233,7 @@ module.exports = {
               const userCount = uniqueUsers.size;
               const maxPlayersText = maxPlayers ? `/${maxPlayers}` : "/∞";
               const footerText = `${
-                isGroupCompleted ? "Completed" : "Ongoing"
+                isGroupCompleted ? "Completed" : "Join"
               } (Users: ${userCount}${maxPlayersText})`;
 
               Object.keys(fields).forEach((key) => {
@@ -225,6 +252,25 @@ module.exports = {
                 descriptionParts.push(description);
               }
 
+              // Validate the date and time format if both are provided
+              if (date && time) {
+                const dateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+                if (!dateTimeRegex.test(`${date} ${time}`)) {
+                  return interaction.reply({
+                    content:
+                      "Invalid date or time format. Please use YYYY-MM-DD for date and HH:MM for time.",
+                    ephemeral: true,
+                  });
+                }
+              } else if ((date && !time) || (!date && time)) {
+                // If only one of date or time is provided, prompt the user to provide both
+                return interaction.reply({
+                  content:
+                    "Please provide both date and time, or leave both empty.",
+                  ephemeral: true,
+                });
+              }
+
               // Get date and time details
               const { dateTime, localTime, relativeTime } = getDateTimeDetails(
                 date,
@@ -233,7 +279,7 @@ module.exports = {
 
               // Add date and time details to the description parts
               let dateTimeParts = [];
-              if (dateTime) dateTimeParts.push(`**Date:** \`${dateTime} UTC\``); // Indicate UTC time
+              if (dateTime) dateTimeParts.push(`**Date:** \`${dateTime}\``); // Indicate UTC time
               if (localTime)
                 dateTimeParts.push(`**Local Time:** <t:${localTime}:F>`); // Discord format for local time
               if (relativeTime)
@@ -446,72 +492,105 @@ module.exports = {
                   const currentValue = field.value;
                   const userId = i.user.toString();
 
-                  // Check if the user is already in any other fields
-                  const userFields = fields.filter((f) =>
-                    f.value.includes(userId)
-                  );
-                  const currentEmbed = i.message.embeds[0];
+                  // Function to count unique users and handle the special cases
+                  const countUniqueUsers = () => {
+                    const allUsers = new Set();
+                    const nonReserveUsers = new Set();
+                    const reserveUsers = new Set();
 
-                  if (currentValue.includes(userId)) {
-                    // User is already in this spot, so remove them
-                    field.value = field.value
-                      .replace(userId, "")
-                      .replace(/^, |, $/, "");
-                    if (field.value === "") field.value = "`Empty`";
-                  } else {
-                    // Count unique users
-                    const uniqueUsers = new Set();
                     fields.forEach((f) => {
                       if (f.value !== "`Empty`") {
-                        f.value
-                          .split(", ")
-                          .forEach((user) => uniqueUsers.add(user));
+                        f.value.split(" ").forEach((user) => {
+                          allUsers.add(user);
+                          if (f.name.toLowerCase().includes("reserve")) {
+                            reserveUsers.add(user);
+                          } else {
+                            nonReserveUsers.add(user);
+                          }
+                        });
                       }
                     });
-                    const currentUserCount = uniqueUsers.size;
 
+                    // If combine is "yes", we count users in both reserve and non-reserve fields only once for non-reserve count
+                    const effectiveNonReserveUsers =
+                      combine.toLowerCase() === "yes"
+                        ? new Set(
+                            [...nonReserveUsers].filter(
+                              (user) => !reserveUsers.has(user)
+                            )
+                          )
+                        : nonReserveUsers;
+
+                    return {
+                      total: allUsers.size,
+                      nonReserve: effectiveNonReserveUsers.size,
+                      reserve: reserveUsers.size,
+                    };
+                  };
+
+                  // Get current user counts
+                  let { total, nonReserve, reserve } = countUniqueUsers();
+
+                  // Unassign the user if they are already in this role
+                  if (currentValue.includes(userId)) {
+                    let users = field.value
+                      .split(" ")
+                      .filter((user) => user !== userId);
+                    field.value = users.length ? users.join(" ") : "`Empty`";
+                  } else {
+                    // Check player limit (excluding reserves)
+                    const isReserveRole = field.name
+                      .toLowerCase()
+                      .includes("reserve");
                     if (
                       maxPlayers &&
-                      currentUserCount >= maxPlayers &&
-                      !userFields.length &&
-                      roleName.toLowerCase() !== "reserve"
+                      nonReserve >= maxPlayers &&
+                      !isReserveRole &&
+                      !fields.some(
+                        (f) =>
+                          f.value.includes(userId) &&
+                          !f.name.toLowerCase().includes("reserve")
+                      )
                     ) {
                       await i.reply({
-                        content: `The \`${maxPlayers}\` player limit has been reached. You can still sign-up as a reserve in case a user drops out.`,
+                        content: `The \`${maxPlayers}\` player limit has been reached. You may still sign up as a reserve in case a user drops out.`,
                         ephemeral: true,
                       });
                       return;
                     }
 
-                    // Check combinability with existing assignments
-                    const nonCombinableRoles = userFields
-                      .filter(
-                        (f) =>
+                    if (combine.toLowerCase() !== "yes") {
+                      // Handle non-combinable roles
+                      const userCurrentRoles = fields
+                        .filter((f) => f.value.includes(userId))
+                        .map((f) => f.name.split(" ")[1].toLowerCase());
+
+                      const nonCombinableRoles = userCurrentRoles.filter(
+                        (currentRole) =>
                           !areRolesCombinable(
                             activityName,
                             roleName,
-                            f.name.split(" ")[1].toLowerCase()
+                            currentRole
                           )
-                      )
-                      .map((f) => f.name.split(" ")[1].toLowerCase());
+                      );
 
-                    if (nonCombinableRoles.length > 0) {
-                      const rolesList = nonCombinableRoles.join(", ");
-                      await i.reply({
-                        content: `The \`${roleName}\` role isn't combinable with some of the roles you currently have: \`${rolesList}\`.`,
-                        ephemeral: true,
-                      });
+                      if (nonCombinableRoles.length > 0) {
+                        const rolesList = nonCombinableRoles.join(" ");
+                        await i.reply({
+                          content: `The \`${roleName}\` role isn't combinable with some of the roles you currently have: \`${rolesList}\`.`,
+                          ephemeral: true,
+                        });
+                        return;
+                      }
 
-                      return;
-                    }
-
-                    // Check if the field is exclusive and already occupied
-                    if (isExclusive && currentValue !== "`Empty`") {
-                      await i.reply({
-                        content: `The ${roleName} role is exclusive and already taken.`,
-                        ephemeral: true,
-                      });
-                      return;
+                      // Handle exclusive roles (only one user allowed) if combine is not "yes"
+                      if (isExclusive && currentValue !== "`Empty`") {
+                        await i.reply({
+                          content: `The ${roleName} role is exclusive and already taken.`,
+                          ephemeral: true,
+                        });
+                        return;
+                      }
                     }
 
                     // Assign the user to this spot
@@ -522,13 +601,19 @@ module.exports = {
                     }
                   }
 
+                  // Recount users after the action
+                  const updatedCounts = countUniqueUsers();
+
+                  // Create and update the embed with the new user assignments
                   const { embed: updatedEmbed, actionRows } =
                     createUpdatedEmbed({
-                      ...currentEmbed,
+                      ...embed,
                       fields: fields,
+                      userCount: updatedCounts.total,
+                      maxPlayers: maxPlayers,
                     });
 
-                  // Update the message with the new embed
+                  // Update the message with the new embed and components
                   await i.update({
                     embeds: [updatedEmbed],
                     components: actionRows,
@@ -586,4 +671,46 @@ module.exports = {
       }
     }
   },
-};
+
+  async autocomplete(interaction) {
+  const focusedOption = interaction.options.getFocused(true);
+  let choices;
+
+  switch (focusedOption.name) {
+    case "date":
+      choices = generateDateChoices();
+      break;
+    case "time":
+      choices = generateTimeChoices();
+      break;
+    default:
+      choices = [];
+  }
+
+  const userInput = focusedOption.value.toLowerCase();
+  let filtered;
+
+  if (focusedOption.name === "date") {
+    filtered = choices.filter(choice => 
+      choice.name.toLowerCase().includes(userInput) ||
+      isValidDateFormat(userInput)
+    );
+  } else if (focusedOption.name === "time") {
+    filtered = choices.filter(choice => 
+      choice.name.toLowerCase().includes(userInput) ||
+      isValidTimeFormat(userInput)
+    );
+  } else {
+    filtered = choices.filter(choice => 
+      choice.name.toLowerCase().includes(userInput)
+    );
+  }
+
+  if (filtered.length === 0 && (isValidDateFormat(userInput) || isValidTimeFormat(userInput))) {
+    filtered.push({ name: userInput, value: userInput });
+  }
+
+  await interaction.respond(
+    filtered.slice(0, 25).map((choice) => ({ name: choice.name, value: choice.value }))
+  );
+}};

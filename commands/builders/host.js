@@ -35,6 +35,7 @@ module.exports = new SlashCommandBuilder()
           )
           .setMaxLength(1024)
       )
+/*
       .addRoleOption((option) =>
         option
           .setName("restrict")
@@ -42,6 +43,8 @@ module.exports = new SlashCommandBuilder()
             "Restrict button interactions for users with this role"
           )
       )
+
+*/
       .addStringOption((option) =>
         option
           .setName("thread")
@@ -55,13 +58,13 @@ module.exports = new SlashCommandBuilder()
         option
           .setName("date")
           .setDescription("Select a date (YYYY-MM-DD)")
-          .addChoices(generateDateChoices())
+          .setAutocomplete(true)
       )
       .addStringOption((option) =>
         option
           .setName("time")
           .setDescription("Select a time (HH:MM)")
-          .addChoices(generateTimeChoices())
+          .setAutocomplete(true)
       )
       .addRoleOption((option) =>
         option
@@ -101,6 +104,16 @@ module.exports = new SlashCommandBuilder()
             { name: "No", value: "no" }
           )
       )
+      .addStringOption((option) =>
+        option
+          .setName("combine")
+          .setDescription("Combine with another activity?")
+          .addChoices(
+            { name: "Yes", value: "yes" },
+            { name: "No", value: "no" }
+          )
+          .setRequired(false)
+      )
   )
 
   .addSubcommand((subcommand) =>
@@ -120,7 +133,7 @@ module.exports = new SlashCommandBuilder()
           .setRequired(true)
       )
   )
-  
+
   .addSubcommand((subcommand) =>
     subcommand
       .setName("unassign")

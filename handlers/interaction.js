@@ -1,22 +1,42 @@
 module.exports = async (interaction, client) => {
-    // console.log('Interaction received:', interaction);
-    
-    if (!interaction.isCommand()) return;
-
+  // Handle autocomplete interactions
+  if (interaction.isAutocomplete()) {
     const command = client.commands.get(interaction.commandName);
-    // console.log('Command received:', interaction.commandName);
-
     if (!command) {
-        console.error(`No command found for: ${interaction.commandName}`);
-        return;
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
+      return;
     }
 
     try {
-        await command.execute(interaction, client.commands, client);
+      await command.autocomplete(interaction);
     } catch (error) {
-        console.error('Error executing command:', error);
-        if (!interaction.replied) {
-            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
-        }
+      console.error(error);
     }
+    return;
+  }
+
+  // Handle command interactions
+  if (interaction.isCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
+      return;
+    }
+
+    try {
+      await command.execute(interaction, client.commands, client);
+    } catch (error) {
+      console.error("Error executing command:", error);
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: "There was an error while executing this command!",
+          ephemeral: true,
+        });
+      }
+    }
+  }
 };
