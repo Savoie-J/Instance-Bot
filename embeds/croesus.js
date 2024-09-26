@@ -6,18 +6,21 @@ const {
 } = require("discord.js");
 
 const combinabilityRules = {
-  woodcutting: ["learner"],
-  fishing: ["learner"],
-  mining: ["learner"],
-  hunter: ["learner"],
-  learner: ["woodcutting", "fishing", "mining", "hunter"]
+  Woodcutting: ["Learner"],
+  Fishing: ["Learner"],
+  Mining: ["Learner"],
+  Hunter: ["Learner"],
+  Learner: ["Woodcutting", "Fishing", "Mining", "H#unter"]
 };
 
 function createCroesusEmbed(user, field = {}) {
   const embed = new EmbedBuilder()
     .setAuthor({ name: user.globalName, iconURL: user.displayAvatarURL() })
     .setTitle("Croesus")
-    .setURL("https://runescape.wiki/w/Croesus/Strategies")
+    .setURL("https://runescape.wiki/w/Croesus")
+    .setThumbnail(
+      "https://runescape.wiki/images/thumb/Croesus.png/300px-Croesus.png?b260c"
+    )
     .setColor("Green")
     .addFields(
       {
@@ -42,7 +45,7 @@ function createCroesusEmbed(user, field = {}) {
       }
     )
     .setFooter({
-      text: "Ongoing Hosting",
+      text: "Join",
       iconURL: "https://cdn.discordapp.com/emojis/1285924977035710514.gif",
     })
     .setTimestamp();
@@ -50,19 +53,19 @@ function createCroesusEmbed(user, field = {}) {
   // First row of buttons
   const actionRow1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId("woodcutting:true")
+      .setCustomId("Woodcutting:true") // customID is what will be sent to users
       .setEmoji("1285633207055810560")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("fishing:true")
+      .setCustomId("Fishing:true")
       .setEmoji("1285633171156893827")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("mining:true")
+      .setCustomId("Mining:true")
       .setEmoji("1285633577962438800")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("hunter:true")
+      .setCustomId("Hunter:true")
       .setEmoji("1285633121534087319")
       .setStyle(ButtonStyle.Secondary)
   );

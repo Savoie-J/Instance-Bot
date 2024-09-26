@@ -23,7 +23,13 @@ module.exports = new SlashCommandBuilder()
           .setDescription("Select an activity")
           .setRequired(true)
           .addChoices(
-            { name: "Croesus", value: "croesus" }
+            { name: "Croesus", value: "croesus" },
+            { name: "AOD - 4 Minion Tanks", value: "aodFourMinion" },
+            { name: "AOD - 2 Minion Tanks", value: "aodTwoMinion" },
+            { name: "Beastmaster Durzag", value: "beastmaster" },
+            { name: "Full Raid (4 Poison)", value: "fullRaidPoison" },
+            { name: "Full Raid (Learner)", value: "fullRaidLearner" }
+
             // Add other activities here
           )
       )
@@ -31,11 +37,11 @@ module.exports = new SlashCommandBuilder()
         option
           .setName("description")
           .setDescription(
-            "Add a description to the top of the embed (max 2048 characters)"
+            "Add a description to the embed (max 1024 characters)"
           )
           .setMaxLength(1024)
       )
-/*
+      /*
       .addRoleOption((option) =>
         option
           .setName("restrict")
@@ -48,7 +54,7 @@ module.exports = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("thread")
-          .setDescription("Create a discussion thread?")
+          .setDescription("Create a discussion thread? (default: yes)")
           .addChoices(
             { name: "Yes", value: "yes" },
             { name: "No", value: "no" }
@@ -66,15 +72,17 @@ module.exports = new SlashCommandBuilder()
           .setDescription("Select a time (HH:MM)")
           .setAutocomplete(true)
       )
-      .addRoleOption((option) =>
+      .addStringOption((option) =>
         option
           .setName("mention")
-          .setDescription("Mention a role for the activity")
+          .setDescription("Mention a role for the activity (@role)")
       )
       .addIntegerOption((option) =>
         option
           .setName("maximum_players")
-          .setDescription("Set the maximum number of players")
+          .setDescription(
+            "Set the maximum number of players (default: infinite)"
+          )
           .setMinValue(1)
       )
       .addStringOption((option) =>
@@ -107,7 +115,9 @@ module.exports = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("combine")
-          .setDescription("Combine with another activity?")
+          .setDescription(
+            "Disregard all role exclusivity and combination rules (default: no)"
+          )
           .addChoices(
             { name: "Yes", value: "yes" },
             { name: "No", value: "no" }

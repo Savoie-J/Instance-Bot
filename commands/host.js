@@ -19,7 +19,6 @@ const generateTimeChoices = handlers.time;
 const generateDateChoices = handlers.date;
 const { loadSettings, saveSettings, setDoublePing, getDoublePing } =
   handlers.settings; // Import settings functions
-const { isRoleRestricted } = require("../handlers/settings");
 const restrictCommand = require("./restrict"); // Adjust path as needed
 
 console.log("Loaded embeds:", Object.keys(embeds)); // Check which embeds are loaded
@@ -33,8 +32,26 @@ for (const [guildId, enabled] of Object.entries(settings.doublePing || {})) {
 }
 
 function areRolesCombinable(activityName, role1, role2) {
+  console.log(
+    `Checking combinability for ${activityName}: '${role1}' and '${role2}'`
+  );
+  if (!role1 || !role2) {
+    console.log("One of the roles is empty, returning false");
+    return false;
+  }
   const rules = embeds[activityName].combinabilityRules;
-  return rules && rules[role1] && rules[role1].includes(role2);
+  if (!rules) {
+    console.log(`No combinability rules found for activity: ${activityName}`);
+    return false;
+  }
+
+  // Check both directions
+  const result =
+    (rules[role1] && rules[role1].includes(role2)) ||
+    (rules[role2] && rules[role2].includes(role1));
+
+  console.log(`Result: ${result}`);
+  return result;
 }
 
 function isValidDateFormat(input) {
@@ -113,7 +130,6 @@ module.exports = {
           const createThread = interaction.options.getString("thread") || "Yes"; // Default to 'Yes'
           const date = interaction.options.getString("date");
           const time = interaction.options.getString("time");
-          const mention = interaction.options.getRole("mention");
           const maxPlayers = interaction.options.getInteger("maximum_players");
           const description = interaction.options.getString("description");
           const combine = interaction.options.getString("combine") || "no";
@@ -141,6 +157,51 @@ module.exports = {
             });
           }
 
+          const input = interaction.options.getString("mention");
+
+          let validMentions = [];
+          let mentionSet = new Set(); // Track unique mentions
+
+          // Ensure input exists before processing mentions
+          if (input) {
+            const mentions = input.split(" ").filter(Boolean); // Splitting input and removing empty strings
+
+            for (let mention of mentions) {
+              const roleId = mention.replace(/[<@&>]/g, "");
+              const userId = mention.replace(/[<@!>]/g, "");
+
+              // Check for duplicates
+              if (mentionSet.has(mention)) {
+                await interaction.reply({
+                  content: "You can't mention the same role more than once.",
+                  ephemeral: true,
+                });
+                return; // Stop processing further
+              }
+
+              mentionSet.add(mention); // Add mention to the set
+
+              // Check if the mention is a role
+              if (interaction.guild.roles.cache.has(roleId)) {
+                validMentions.push(`<@&${roleId}>`); // Role mention
+              } else if (interaction.guild.members.cache.has(userId)) {
+                // If the mention is a user
+                await interaction.reply({
+                  content: `${mention} is not a valid role, please use only role mentions.`,
+                  ephemeral: true,
+                });
+                return; // Stop processing further
+              } else {
+                // If the mention is neither a role nor a user (possibly a channel or invalid mention)
+                await interaction.reply({
+                  content: `${mention} is not a valid role, please ensure you're only mentioning roles.`,
+                  ephemeral: true,
+                });
+                return; // Stop processing further
+              }
+            }
+          }
+
           // Access the function within the module
           const embedModule = embeds[activityName];
           if (!embedModule) {
@@ -162,14 +223,13 @@ module.exports = {
 
           if (embedFunction) {
             const fields = {};
-
             let isGroupCompleted = false;
             let reply = "";
 
-            // Mention role if provided
-            if (mention) {
-              reply = `<@&${mention.id}>`;
-            } // Role mention in the content field
+            // Check if validMentions exists and has valid entries
+            if (validMentions.length > 0) {
+              reply = validMentions.join(" "); // Combine all valid mentions
+            }
 
             const createUpdatedEmbed = (currentEmbed) => {
               const { embed, actionRow1, actionRow2 } = embedFunction(
@@ -186,11 +246,12 @@ module.exports = {
               if (
                 addFill &&
                 !embed.data.fields.some(
-                  (field) => field.name === ":scales: Fill"
+                  (field) =>
+                    field.name === "<:Intercept:1287469958909136988> Fill"
                 )
               ) {
                 embed.addFields({
-                  name: ":scales: Fill",
+                  name: "<:Intercept:1287469958909136988> Fill",
                   value: "`Empty`",
                   inline: true,
                 });
@@ -198,11 +259,12 @@ module.exports = {
               if (
                 addLearner &&
                 !embed.data.fields.some(
-                  (field) => field.name === ":mortar_board: Learner"
+                  (field) =>
+                    field.name === "<:Intercepted:1287469955465609321> Learner"
                 )
               ) {
                 embed.addFields({
-                  name: ":mortar_board: Learner",
+                  name: "<:Intercepted:1287469955465609321> Learner",
                   value: "`Empty`",
                   inline: true,
                 });
@@ -211,11 +273,11 @@ module.exports = {
                 addReserve &&
                 !embed.data.fields.some(
                   (field) =>
-                    field.name === "<a:reserve:1286334952090370132> Reserve"
+                    field.name === "<:Team:1287469956824432713> Reserve"
                 )
               ) {
                 embed.addFields({
-                  name: "<a:reserve:1286334952090370132> Reserve",
+                  name: "<:Team:1287469956824432713> Reserve",
                   value: "`Empty`",
                   inline: true,
                 });
@@ -223,12 +285,23 @@ module.exports = {
 
               const uniqueUsers = new Set();
               embed.data.fields.forEach((field) => {
-                if (field.value !== "`Empty`") {
-                  field.value
-                    .split(", ")
-                    .forEach((user) => uniqueUsers.add(user));
+                if (field.value !== "`Empty`" && field.name.trim() !== "") {
+                  field.value.split("\n").forEach((line) => {
+                    const trimmedLine = line.trim();
+                    if (
+                      trimmedLine !== "" &&
+                      trimmedLine !== "`Empty`" &&
+                      trimmedLine !== "\u200B"
+                    ) {
+                      const match = trimmedLine.match(/<@!?(\d+)>/);
+                      if (match) {
+                        uniqueUsers.add(match[0]);
+                      }
+                    }
+                  });
                 }
               });
+
               // Count users and update footer
               const userCount = uniqueUsers.size;
               const maxPlayersText = maxPlayers ? `/${maxPlayers}` : "/∞";
@@ -307,12 +380,12 @@ module.exports = {
                   : "https://cdn.discordapp.com/emojis/1285924977035710514.gif",
               });
 
-              // Function to split buttons into groups of 4
+              // Function to split buttons into groups of 5
               const splitButtonsIntoRows = (buttons) => {
                 const rows = [];
-                for (let i = 0; i < buttons.length; i += 4) {
+                for (let i = 0; i < buttons.length; i += 5) {
                   const row = new ActionRowBuilder().addComponents(
-                    buttons.slice(i, i + 4)
+                    buttons.slice(i, i + 5)
                   );
                   rows.push(row);
                 }
@@ -326,25 +399,25 @@ module.exports = {
               if (addFill) {
                 allButtons.push(
                   new ButtonBuilder()
-                    .setCustomId("fill:false")
+                    .setCustomId("Fill:false")
                     .setStyle(ButtonStyle.Secondary)
-                    .setEmoji("⚖️")
+                    .setEmoji("1287469958909136988")
                 );
               }
               if (addLearner) {
                 allButtons.push(
                   new ButtonBuilder()
-                    .setCustomId("learner:false")
+                    .setCustomId("Learner:false")
                     .setStyle(ButtonStyle.Secondary)
-                    .setEmoji("🎓")
+                    .setEmoji("1287469955465609321")
                 );
               }
               if (addReserve) {
                 allButtons.push(
                   new ButtonBuilder()
-                    .setCustomId("reserve:false")
+                    .setCustomId("Reserve:false")
                     .setStyle(ButtonStyle.Secondary)
-                    .setEmoji("1286334952090370132")
+                    .setEmoji("1287469956824432713")
                 );
               }
 
@@ -380,12 +453,19 @@ module.exports = {
 
             const { embed, actionRows } = createUpdatedEmbed();
 
+            // Collect role IDs from valid mentions
+            const roleIds = validMentions
+              .filter((mention) => mention.startsWith("<@&")) // Filter for role mentions only
+              .map((mention) => mention.replace(/[<@&>]/g, "")); // Extract the role ID
+
+            // console.log(roleIds);
+
             const sentMessage = await interaction.reply({
               content: reply,
               embeds: [embed],
               components: actionRows,
               fetchReply: true,
-              allowedMentions: { roles: [mention ? mention.id : null] },
+              allowedMentions: { roles: roleIds },
             });
 
             // Set up a persistent collector for button interactions
@@ -492,23 +572,36 @@ module.exports = {
                   const currentValue = field.value;
                   const userId = i.user.toString();
 
-                  // Function to count unique users and handle the special cases
                   const countUniqueUsers = () => {
                     const allUsers = new Set();
                     const nonReserveUsers = new Set();
                     const reserveUsers = new Set();
 
                     fields.forEach((f) => {
-                      if (f.value !== "`Empty`") {
-                        f.value.split(" ").forEach((user) => {
-                          allUsers.add(user);
-                          if (f.name.toLowerCase().includes("reserve")) {
-                            reserveUsers.add(user);
-                          } else {
-                            nonReserveUsers.add(user);
+                      // Skip fields that are just blank Unicode characters or empty
+                      if (f.name.trim() === "" || f.value.trim() === "") return;
+
+                      f.value.split("\n").forEach((line) => {
+                        // Trim the line and check if it's not empty, not 'Empty', and not a blank Unicode character
+                        const trimmedLine = line.trim();
+                        if (
+                          trimmedLine !== "" &&
+                          trimmedLine !== "`Empty`" &&
+                          trimmedLine !== "\u200B"
+                        ) {
+                          // Extract user ID from the line
+                          const match = trimmedLine.match(/<@!?(\d+)>/);
+                          if (match) {
+                            const user = match[0];
+                            allUsers.add(user);
+                            if (f.name.toLowerCase().includes("reserve")) {
+                              reserveUsers.add(user);
+                            } else {
+                              nonReserveUsers.add(user);
+                            }
                           }
-                        });
-                      }
+                        }
+                      });
                     });
 
                     // If combine is "yes", we count users in both reserve and non-reserve fields only once for non-reserve count
@@ -531,12 +624,18 @@ module.exports = {
                   // Get current user counts
                   let { total, nonReserve, reserve } = countUniqueUsers();
 
-                  // Unassign the user if they are already in this role
-                  if (currentValue.includes(userId)) {
-                    let users = field.value
-                      .split(" ")
-                      .filter((user) => user !== userId);
-                    field.value = users.length ? users.join(" ") : "`Empty`";
+                  // Check if the user is already in this role
+                  const userInRole = currentValue.includes(userId);
+
+                  // Handle assignment/unassignment
+                  if (userInRole) {
+                    // Unassign the user
+                    const updatedLines = currentValue
+                      .split("\n")
+                      .map((line) =>
+                        line.includes(userId) ? "`Empty`" : line
+                      );
+                    field.value = updatedLines.join("\n");
                   } else {
                     // Check player limit (excluding reserves)
                     const isReserveRole = field.name
@@ -562,8 +661,22 @@ module.exports = {
                     if (combine.toLowerCase() !== "yes") {
                       // Handle non-combinable roles
                       const userCurrentRoles = fields
-                        .filter((f) => f.value.includes(userId))
-                        .map((f) => f.name.split(" ")[1].toLowerCase());
+                        .filter(
+                          (field) =>
+                            field.value.includes(userId) &&
+                            field.value !== "`Empty`"
+                        )
+                        .map((field) => {
+                          //console.log("Processing field:", field);
+                          // Extract the role name from the field name, preserving case
+                          const roleName = field.name
+                            .replace(/^<:[^:]+:\d+>\s*/, "")
+                            .trim();
+                          //console.log("Extracted role name:", roleName);
+                          return roleName;
+                        });
+
+                      console.log("User current roles:", userCurrentRoles);
 
                       const nonCombinableRoles = userCurrentRoles.filter(
                         (currentRole) =>
@@ -574,17 +687,21 @@ module.exports = {
                           )
                       );
 
+                      //console.log("Non-combinable roles:", nonCombinableRoles);
+
                       if (nonCombinableRoles.length > 0) {
-                        const rolesList = nonCombinableRoles.join(" ");
+                        const rolesList = nonCombinableRoles
+                          .map((role) => role)
+                          .join(", ");
                         await i.reply({
-                          content: `The \`${roleName}\` role isn't combinable with some of the roles you currently have: \`${rolesList}\`.`,
+                          content: `The \`${roleName}\` role isn't combinable with your \`${rolesList}\` role.`,
                           ephemeral: true,
                         });
                         return;
                       }
 
                       // Handle exclusive roles (only one user allowed) if combine is not "yes"
-                      if (isExclusive && currentValue !== "`Empty`") {
+                      if (isExclusive && !currentValue.includes("`Empty`")) {
                         await i.reply({
                           content: `The ${roleName} role is exclusive and already taken.`,
                           ephemeral: true,
@@ -593,11 +710,20 @@ module.exports = {
                       }
                     }
 
-                    // Assign the user to this spot
-                    if (currentValue === "`Empty`") {
-                      field.value = userId;
+                    // Assign the user to the first empty spot
+                    const lines = currentValue.split("\n");
+                    const emptyIndex = lines.findIndex(
+                      (line) => line === "`Empty`"
+                    );
+                    if (emptyIndex !== -1) {
+                      lines[emptyIndex] = userId;
+                      field.value = lines.join("\n");
                     } else {
-                      field.value += ` ${userId}`;
+                      await i.reply({
+                        content: `No empty spots available for ${roleName}.`,
+                        ephemeral: true,
+                      });
+                      return;
                     }
                   }
 
@@ -639,10 +765,16 @@ module.exports = {
               // Check if double-ping is enabled for this server
               const doublePingEnabled =
                 doublePingSettings.get(interaction.guildId) || false;
-              if (doublePingEnabled && mention) {
+
+              if (doublePingEnabled && validMentions.length > 0) {
+                const mentionContent = validMentions.join(" "); // Combine all mentions into a single string
                 await thread.send({
-                  content: `<@&${mention.id}>`,
-                  allowedMentions: { roles: [mention.id] },
+                  content: mentionContent,
+                  allowedMentions: {
+                    roles: validMentions.map((mention) =>
+                      mention.replace(/[<@&>]/g, "")
+                    ),
+                  },
                 });
               }
             }
@@ -673,44 +805,50 @@ module.exports = {
   },
 
   async autocomplete(interaction) {
-  const focusedOption = interaction.options.getFocused(true);
-  let choices;
+    const focusedOption = interaction.options.getFocused(true);
+    let choices = [];
 
-  switch (focusedOption.name) {
-    case "date":
-      choices = generateDateChoices();
-      break;
-    case "time":
-      choices = generateTimeChoices();
-      break;
-    default:
-      choices = [];
-  }
+    switch (focusedOption.name) {
+      case "date":
+        choices = generateDateChoices();
+        break;
+      case "time":
+        choices = generateTimeChoices();
+        break;
+    }
 
-  const userInput = focusedOption.value.toLowerCase();
-  let filtered;
+    const userInput = focusedOption.value.toLowerCase();
+    let filtered;
 
-  if (focusedOption.name === "date") {
-    filtered = choices.filter(choice => 
-      choice.name.toLowerCase().includes(userInput) ||
-      isValidDateFormat(userInput)
+    if (focusedOption.name === "date") {
+      filtered = choices.filter(
+        (choice) =>
+          choice.name.toLowerCase().includes(userInput) ||
+          isValidDateFormat(userInput)
+      );
+    } else if (focusedOption.name === "time") {
+      filtered = choices.filter(
+        (choice) =>
+          choice.name.toLowerCase().includes(userInput) ||
+          isValidTimeFormat(userInput)
+      );
+    } else {
+      filtered = choices.filter((choice) =>
+        choice.name.toLowerCase().includes(userInput)
+      );
+    }
+
+    if (
+      filtered.length === 0 &&
+      (isValidDateFormat(userInput) || isValidTimeFormat(userInput))
+    ) {
+      filtered.push({ name: userInput, value: userInput });
+    }
+
+    await interaction.respond(
+      filtered
+        .slice(0, 25)
+        .map((choice) => ({ name: choice.name, value: choice.value }))
     );
-  } else if (focusedOption.name === "time") {
-    filtered = choices.filter(choice => 
-      choice.name.toLowerCase().includes(userInput) ||
-      isValidTimeFormat(userInput)
-    );
-  } else {
-    filtered = choices.filter(choice => 
-      choice.name.toLowerCase().includes(userInput)
-    );
-  }
-
-  if (filtered.length === 0 && (isValidDateFormat(userInput) || isValidTimeFormat(userInput))) {
-    filtered.push({ name: userInput, value: userInput });
-  }
-
-  await interaction.respond(
-    filtered.slice(0, 25).map((choice) => ({ name: choice.name, value: choice.value }))
-  );
-}};
+  },
+};

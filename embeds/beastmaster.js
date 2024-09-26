@@ -7,44 +7,49 @@ const {
 
 // separate by commas, based on button's customID
 const combinabilityRules = {
-  Role1: ["Learner"],
-  Role2: ["Learner"],
-  Role3: ["Learner"],
-  "Role4": ["Learner"],
-  Learner: ["Role1", "Role2", "Role3", "Role 4"],
+  base: ["learner"],
+  backup: ["learner"],
+  nc: ["learner"],
+  pet1: ["learner"],
+  pet2: ["learner"],
+  learner: ["base", "backup", "nc", "pet 1/3", "pet 2"],
 };
 
-
 // Boss == value set in builder with the first letter capitalized, keep it lowercase in value
-function createBossEmbed(user, field = {}) {
+function createBeastmasterEmbed(user, field = {}) {
   // Create the embed
   const embed = new EmbedBuilder()
     .setAuthor({ name: user.globalName, iconURL: user.displayAvatarURL() })
-    .setTitle("Boss") // BossName
-    .setURL("https://runescape.wiki/") // Link to strategy guide or wiki page
-    .setThumbnail() //link to image (cant host locally)
-    .setColor("Green") // Change to fit boss
+    .setTitle("Beastmaster Durzag") // BossName
+    .setURL("https://runescape.wiki/w/Beastmaster_Durzag") // Link to strategy guide or wiki page
+    .setThumbnail("https://runescape.wiki/images/Beastmaster_Durzag.png?4eea4") //link to image (cant host locally)
+    .setColor("LightGrey") // Change to fit boss
     .addFields(
       {
-        name: "<:emoji_name:emojiID> Role1", //Field.name MUST match the name in this role
-        value: field.role1 || "`Empty`",
+        name: "<:Incite:1287459187194073189> Base",
+        value: field.base || "`Empty`",
         inline: true,
       },
       {
-        name: "<:emoji_name:emojiID> Role2 ",
-        value: field.role2 || "`Empty`\n`Empty`\n`Empty`\n`Empty`",
+        name: "<:loyalty:1287461613921636503> Backup",
+        value: field.backup || "`Empty`",
         inline: true,
       },
       {
-        name: "<:emoji_name:emojiID> Role3",
-        value: field.role3 || "`Empty`",
+        name: "<:salvation:1287461617017032805> North Chargers",
+        value: field.nc || "`Empty`",
         inline: true,
       },
       {
-        name: "<:emoji_name:emojiID> Role 4",
-        value: field["Role 4"] || "`Empty`", // If not a single word use quotes
+        name: "<:Divert:1287452889333108788> Pet 1/3",
+        value: field.pet1 || "`Empty`",
         inline: true,
-      }
+      },
+      {
+        name: "<:Resonance:1288127144697794643> Pet 2",
+        value: field.pet2 || "`Empty`",
+        inline: true,
+      },
     )
     .setFooter({
       text: "Ongoing Hosting",
@@ -55,20 +60,24 @@ function createBossEmbed(user, field = {}) {
   // First row of buttons
   const actionRow1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder() //match custom id to field.[customID] above
-      .setCustomId("role1:true") // 'false' means non-exclusive
-      .setEmoji("1285633207055810560")
+      .setCustomId("base:true") // 'false' means non-exclusive
+      .setEmoji("1287459187194073189")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("role2:false") // 'true' means exclusive (only one person on this role)
-      .setEmoji("1285633171156893827")
+      .setCustomId("backup:true") // 'true' means exclusive (only one person on this role)
+      .setEmoji("1287461613921636503")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("role3:false")
-      .setEmoji("1285633577962438800")
+      .setCustomId("nc:true")
+      .setEmoji("1287461617017032805")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("role4:false")
-      .setEmoji("1285633121534087319")
+      .setCustomId("pet1:true")
+      .setEmoji("1287452889333108788")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId("pet2:true")
+      .setEmoji("1288127144697794643")
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -90,4 +99,4 @@ function createBossEmbed(user, field = {}) {
   return { embed, actionRow1, actionRow2 }; // Ensure actionRows is returned correctly
 }
 
-module.exports = { createBossEmbed, combinabilityRules };
+module.exports = { createBeastmasterEmbed, combinabilityRules };
