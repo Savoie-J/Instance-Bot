@@ -35,16 +35,16 @@ function createFullRaidPoisonEmbed(user, field = {}) {
     .setTitle("Full Raid (4 Poisons)") // BossName
     .setURL("https://runescape.wiki/w/Yakamaru") // Link to strategy guide or wiki page
     .setThumbnail("https://runescape.wiki/images/Sick_Yakamaru.png?60a57") //link to image (cant host locally)
-    .setColor("DarkGreen") // Change to fit boss
+    .setColor("Random") // Change to fit boss
     .addFields(
       {
         name: "<:Incite:1287459187194073189> Base", //customize per embed for aesthetic widths
-        value: field.base || "`Empty`",
+        value: field.Base || "`Empty`",
         inline: true,
       },
       {
         name: "<:loyalty:1287461613921636503> Backup",
-        value: field.backup || "`Empty`",
+        value: field.Backup || "`Empty`",
         inline: true,
       },
       {
@@ -89,7 +89,7 @@ function createFullRaidPoisonEmbed(user, field = {}) {
       },
       {
         name: "<:constitution:1288496464942862407> CPR",
-        value: field.cpr || "`Empty`",
+        value: field.CPR || "`Empty`",
         inline: true,
       },
       {
@@ -124,7 +124,7 @@ function createFullRaidPoisonEmbed(user, field = {}) {
       },
       {
         name: "<:WeaponSpecialAttack:1287459183503081492> Free",
-        value: field.free || "`Empty`",
+        value: field.Free || "`Empty`",
         inline: true,
       }
     )

@@ -7,15 +7,15 @@ const {
 
 // separate by commas, based on button's customID
 const combinabilityRules = {
-  base: ["learner", "hammer", "Smoke Cloud"],
-  umbra: ["learner", "hammer", "Smoke Cloud"],
-  glacies: ["learner", "hammer", "Smoke Cloud"],
-  cruor: ["learner", "hammer", "Smoke Cloud"],
-  fumus: ["learner", "hammer", "Smoke Cloud"],
-  "Smoke Cloud": ["base", "Umbra", "Glacies", "Cruor", "Fumus", "learner", "hammer"],
-  hammer: ["base", "Umbra", "Glacies", "Cruor", "Fumus", "learner", "Smoke Cloud"],
-  free: ["learner"],
-  learner: [
+  Base: ["Learner", "Hammer", "Smoke Cloud"],
+  Umbra: ["Learner", "Hammer", "Smoke Cloud"],
+  Glacies: ["Learner", "Hammer", "Smoke Cloud"],
+  Cruor: ["Learner", "Hammer", "Smoke Cloud"],
+  Fumus: ["Learner", "Hammer", "Smoke Cloud"],
+  "Smoke Cloud": ["Base", "Umbra", "Glacies", "Cruor", "Fumus", "Learner", "Hammer"],
+  Hammer: ["Base", "Umbra", "Glacies", "Cruor", "Fumus", "Learner", "Smoke Cloud"],
+  Free: ["Learner"],
+  Learner: [
     "Base",
     "Umbra",
     "Glacies",
@@ -35,31 +35,31 @@ function createAodFourMinionEmbed(user, field = {}) {
     .setTitle("Angel of Death - 4 Minion Tanks") // BossName
     .setURL("https://runescape.wiki/w/Nex") // Link to strategy guide or wiki page
     .setThumbnail("https://runescape.wiki/images/Nex_profile.png?402fb") //link to image (cant host locally)
-    .setColor("DarkRed") // Change to fit boss
+    .setColor("Random") // Change to fit boss
     .addFields(
       {
         name: "<:Incite:1287459187194073189> Base",
-        value: field.base || "`Empty`",
+        value: field.Base || "`Empty`",
         inline: true,
       },
       {
-        name: "<:umbra:1287465186537508884> Umbra",
-        value: field.umbra || "`Empty`",
+        name: "<:Umbra:1287465186537508884> Umbra",
+        value: field.Umbra || "`Empty`",
         inline: true,
       },
       {
-        name: "<:glacies:1287465243303350383> Glacies",
-        value: field.glacies || "`Empty`",
+        name: "<:Glacies:1287465243303350383> Glacies",
+        value: field.Glacies || "`Empty`",
         inline: true,
       },
       {
-        name: "<:cruor:1287465217730547825> Cruor",
-        value: field.cruor || "`Empty`",
+        name: "<:Cruor:1287465217730547825> Cruor",
+        value: field.Cruor || "`Empty`",
         inline: true,
       },
       {
-        name: "<:fumus:1287465149363654697> Fumus",
-        value: field.fumus || "`Empty`",
+        name: "<:Fumus:1287465149363654697> Fumus",
+        value: field.Fumus || "`Empty`",
         inline: true,
       },
       {
@@ -69,12 +69,12 @@ function createAodFourMinionEmbed(user, field = {}) {
       },
       {
         name: "<:Statius:1287452886854533172> Hammer",
-        value: field.hammer || "`Empty`",
+        value: field.Hammer || "`Empty`",
         inline: true,
       },
       {
         name: "<:WeaponSpecialAttack:1287459183503081492> Free",
-        value: field.free || "`Empty`",
+        value: field.Free || "`Empty`",
         inline: true,
       }
     )

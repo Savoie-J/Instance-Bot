@@ -10,7 +10,7 @@ const combinabilityRules = {
   Fishing: ["Learner"],
   Mining: ["Learner"],
   Hunter: ["Learner"],
-  Learner: ["Woodcutting", "Fishing", "Mining", "H#unter"]
+  Learner: ["Woodcutting", "Fishing", "Mining", "Hunter"]
 };
 
 function createCroesusEmbed(user, field = {}) {
@@ -21,26 +21,26 @@ function createCroesusEmbed(user, field = {}) {
     .setThumbnail(
       "https://runescape.wiki/images/thumb/Croesus.png/300px-Croesus.png?b260c"
     )
-    .setColor("Green")
+    .setColor("Random")
     .addFields(
       {
         name: "<:woodcutting:1285633207055810560> Woodcutting",
-        value: field.woodcutting || "`Empty`",
+        value: field.Woodcutting || "`Empty`",
         inline: true,
       },
       {
         name: "<:fishing:1285633171156893827> Fishing",
-        value: field.fishing || "`Empty`",
+        value: field.Fishing || "`Empty`",
         inline: true,
       },
       {
         name: "<:mining:1285633577962438800> Mining",
-        value: field.mining || "`Empty`",
+        value: field.Mining || "`Empty`",
         inline: true,
       },
       {
         name: "<:hunter:1285633121534087319> Hunter",
-        value: field.hunter || "`Empty`",
+        value: field.Hunter || "`Empty`",
         inline: true,
       }
     )

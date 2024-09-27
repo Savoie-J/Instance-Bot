@@ -7,19 +7,19 @@ const {
 
 // separate by commas, based on button's customID
 const combinabilityRules = {
-  base: ["learner", "hammer", "cloud"],
-  umbra: ["learner", "hammer", "cloud"],
-  cruor: ["learner", "hammer", "cloud"],
-  cloud: ["base", "umbra", "cruor", "learner", "hammer"],
-  hammer: ["base", "umbra", "cruor", "learner", "cloud"],
-  free: ["learner"],
-  learner: [
-    "base",
-    "umbra",
-    "cruor",
-    "cloud",
-    "hammer",
-    "free",
+  Base: ["Learner", "Hammer", "Smoke Cloud"],
+  "Umbra - Glacies": ["Learner", "Hammer", "Smoke Cloud"],
+  "Cruor - Fumus": ["Learner", "Hammer", "Smoke Cloud"],
+  "Smoke Cloud": ["Base", "Umbra - Glacies", "Cruor - Fumus",  "Learner", "Hammer"],
+  Hammer: ["Base", "Umbra - Glacies", "Cruor - Fumus", "Learner", "Smoke Cloud"],
+  Free: ["Learner"],
+  Learner: [
+    "Base",
+    "Umbra - Glacies",
+    "Cruor - Fumus",
+    "Smoke Cloud",
+    "Hammer",
+    "Free",
   ],
 };
 
@@ -33,36 +33,36 @@ function createAodTwoMinionEmbed(user, field = {}) {
     .setThumbnail(
       "https://runescape.wiki/images/Nex_%28Angel_of_Death%29.png?16149"
     ) //link to image (cant host locally)
-    .setColor("Red") // Change to fit boss
+    .setColor("Random") // Change to fit boss
     .addFields(
       {
         name: "<:Incite:1287459187194073189> Base",
-        value: field.base || "`Empty`",
+        value: field.Base || "`Empty`",
         inline: true,
       },
       {
         name: "<:umbra:1287465186537508884> Umbra - Glacies",
-        value: field.umbra || "`Empty`",
+        value: field["Umbra - Glacies"] || "`Empty`",
         inline: true,
       },
       {
         name: "<:cruor:1287465217730547825> Cruor - Fumus",
-        value: field.cruor || "`Empty`",
+        value: field["Cruor - Fumus"] || "`Empty`",
         inline: true,
       },
       {
         name: "<:SmokeCloud:1287452887819096165> Smoke Cloud",
-        value: field.cloud || "`Empty`",
+        value: field["Smoke Cloud"] || "`Empty`",
         inline: true,
       },
       {
         name: "<:Statius:1287452886854533172> Hammer",
-        value: field.hammer || "`Empty`",
+        value: field.Hammer || "`Empty`",
         inline: true,
       },
       {
         name: "<:WeaponSpecialAttack:1287459183503081492> Free",
-        value: field.free || "`Empty`",
+        value: field.Free || "`Empty`",
         inline: true,
       }
     )
@@ -75,27 +75,27 @@ function createAodTwoMinionEmbed(user, field = {}) {
   // First row of buttons
   const actionRow1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder() //match custom id to field.[customID] above
-      .setCustomId("base:true") // 'false' means non-exclusive
+      .setCustomId("Base:true") // 'false' means non-exclusive
       .setEmoji("1287459187194073189")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("umbra:true") // 'true' means exclusive (only one person on this role)
+      .setCustomId("Umbra - Glacies:true") // 'true' means exclusive (only one person on this role)
       .setEmoji("1287465186537508884")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("cruor:true")
+      .setCustomId("Cruor - Fumus:true")
       .setEmoji("1287465217730547825")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("cloud:true")
+      .setCustomId("Smoke Cloud:true")
       .setEmoji("1287452887819096165")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("hammer:true")
+      .setCustomId("Hammer:true")
       .setEmoji("1287452886854533172")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("free:false")
+      .setCustomId("Free:false")
       .setEmoji("1287459183503081492")
       .setStyle(ButtonStyle.Secondary)
   );

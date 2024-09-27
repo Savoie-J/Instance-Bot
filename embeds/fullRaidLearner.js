@@ -39,16 +39,16 @@ const {
       .setTitle("Full Raid (Learner)") // BossName
       .setURL("https://runescape.wiki/w/Yakamaru") // Link to strategy guide or wiki page
       .setThumbnail("https://runescape.wiki/images/Yakamaru.png?18623") //link to image (cant host locally)
-      .setColor("DarkAqua") // Change to fit boss
+      .setColor("Random") // Change to fit boss
       .addFields(
         {
           name: "<:Incite:1287459187194073189> Base",
-          value: field.base || "`Empty`",
+          value: field.Base || "`Empty`",
           inline: true,
         },
         {
           name: "<:loyalty:1287461613921636503> Backup",
-          value: field.backup || "`Empty`",
+          value: field.Backup || "`Empty`",
           inline: true,
         },
         {
@@ -93,7 +93,7 @@ const {
         },
         {
           name: "<:constitution:1288496464942862407> CPR",
-          value: field.cpr || "`Empty`",
+          value: field.CPR || "`Empty`",
           inline: true,
         },
         {
@@ -113,7 +113,7 @@ const {
         },
         {
           name: "<:Surge:1288647970216083527> Double",
-          value: field.double || "`Empty`",
+          value: field.Double || "`Empty`",
           inline: true,
         },
         {
@@ -143,7 +143,7 @@ const {
         },
         {
           name: "<:WeaponSpecialAttack:1287459183503081492> Free",
-          value: field.free || "`Empty`",
+          value: field.Free || "`Empty`",
           inline: true,
         }
       )
@@ -156,11 +156,11 @@ const {
     // First row of buttons
     const actionRow1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-      .setCustomId("base:true")
+      .setCustomId("Base:true")
       .setEmoji("1287459187194073189")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("backup:true")
+      .setCustomId("Backup:true")
       .setEmoji("1287461613921636503")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
@@ -220,7 +220,7 @@ const {
       .setEmoji("1288498547444027392")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
-      .setCustomId("free:false")
+      .setCustomId("Free:false")
       .setEmoji("1287459183503081492")
       .setStyle(ButtonStyle.Secondary)
     );

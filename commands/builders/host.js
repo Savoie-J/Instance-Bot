@@ -23,14 +23,16 @@ module.exports = new SlashCommandBuilder()
           .setDescription("Select an activity")
           .setRequired(true)
           .addChoices(
-            { name: "Croesus", value: "croesus" },
-            { name: "AOD - 4 Minion Tanks", value: "aodFourMinion" },
             { name: "AOD - 2 Minion Tanks", value: "aodTwoMinion" },
+            { name: "AOD - 4 Minion Tanks", value: "aodFourMinion" },
             { name: "Beastmaster Durzag", value: "beastmaster" },
+            { name: "Croesus", value: "croesus" },
             { name: "Full Raid (4 Poison)", value: "fullRaidPoison" },
-            { name: "Full Raid (Learner)", value: "fullRaidLearner" }
-
-            // Add other activities here
+            { name: "Full Raid (Learner)", value: "fullRaidLearner" },
+            { name: "Solak", value: "solak" },
+            { name: "Vorago (Normal Mode)", value: "voragoNM" },
+            { name: "Vorago (Hard Mode)", value: "voragoHM" },
+            { name: "Vorkath", value: "vorkath" }
           )
       )
       .addStringOption((option) =>
