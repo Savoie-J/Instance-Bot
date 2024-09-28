@@ -7,11 +7,12 @@ const {
 
 // separate by commas, based on button's customID
 const combinabilityRules = {
-  Base: ["Learner", "Hammer", "Smoke Cloud"],
-  "Umbra - Glacies": ["Learner", "Hammer", "Smoke Cloud"],
-  "Cruor - Fumus": ["Learner", "Hammer", "Smoke Cloud"],
-  "Smoke Cloud": ["Base", "Umbra - Glacies", "Cruor - Fumus",  "Learner", "Hammer"],
-  Hammer: ["Base", "Umbra - Glacies", "Cruor - Fumus", "Learner", "Smoke Cloud"],
+  Base: ["Learner", "Hammer", "Smoke Cloud", "Threads"],
+  "Umbra - Glacies": ["Learner", "Hammer", "Smoke Cloud", "Threads"],
+  "Cruor - Fumus": ["Learner", "Hammer", "Smoke Cloud", "Threads"],
+  Threads: ["Base", "Umbra - Glacies", "Cruor - Fumus",  "Learner", "Hammer", "Smoke Cloud"],
+  "Smoke Cloud": ["Base", "Umbra - Glacies", "Cruor - Fumus",  "Learner", "Hammer", "Threads"],
+  Hammer: ["Base", "Umbra - Glacies", "Cruor - Fumus", "Learner", "Smoke Cloud", "Threads"],
   Free: ["Learner"],
   Learner: [
     "Base",
@@ -20,6 +21,7 @@ const combinabilityRules = {
     "Smoke Cloud",
     "Hammer",
     "Free",
+    "Threads"
   ],
 };
 
@@ -48,6 +50,11 @@ function createAodTwoMinionEmbed(user, field = {}) {
       {
         name: "<:cruor:1287465217730547825> Cruor - Fumus",
         value: field["Cruor - Fumus"] || "`Empty`",
+        inline: true,
+      },
+      {
+        name: "<:tof:1289375450694680679> Threads",
+        value: field.Threads || "`Empty`",
         inline: true,
       },
       {
@@ -85,6 +92,10 @@ function createAodTwoMinionEmbed(user, field = {}) {
     new ButtonBuilder()
       .setCustomId("Cruor - Fumus:true")
       .setEmoji("1287465217730547825")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId("Threads:true")
+      .setEmoji("1289375450694680679")
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId("Smoke Cloud:true")
